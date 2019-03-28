@@ -14,6 +14,8 @@ typedef int type_socket;
 
 class Error: public std::exception {
 public:
+    virtual const char* what() = 0;
+
     virtual void cleanup() = 0;
 };
 namespace Error_types {
@@ -76,10 +78,11 @@ namespace Error_types {
 
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     try {
         // Socket initialization
         type_socket listening_socket = socket(AF_INET, SOCK_STREAM, 0);
+                                            // IPv4     TCP     IPPROTO_TCP
         if ( listening_socket == -1 ) {
             throw Error_types::Init_error();
         }
