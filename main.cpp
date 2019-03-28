@@ -37,9 +37,8 @@ namespace Error_types {
 
     class Bind_error: public Error {
     public:
-        Bind_error(type_socket* input_socket, sockaddr_in* input_sockaddr): error_message("Binding error! Bind() failed.") {
+        Bind_error(type_socket* input_socket): error_message("Binding error! Bind() failed.") {
             socket_to_close = input_socket;
-            sockaddr_to_clear = input_sockaddr;
         }
 
         const char* what() {
@@ -47,14 +46,12 @@ namespace Error_types {
         }
 
         void cleanup() {
-            delete sockaddr_to_clear;
             close(*socket_to_close);
             std::cout << "Listening socket has been closed.\n";
         }
     private:
         std::string error_message;
         type_socket* socket_to_close;
-        sockaddr_in* sockaddr_to_clear;
     };
 
     class Listen_error: public Error {
@@ -82,23 +79,22 @@ int main(int argc, char* argv[]) {
     try {
         // Socket initialization
         type_socket listening_socket = socket(AF_INET, SOCK_STREAM, 0);
-                                            // IPv4     TCP     IPPROTO_TCP
+                                            // IPv4     gTCP     IPPROTO_TCP
         if ( listening_socket == -1 ) {
             throw Error_types::Init_error();
         }
         std::cout << "Listening socket has been opened!\n";
 
         // Setting socket info
-        struct sockaddr_in* socket_info = new sockaddr_in;
-        socket_info->sin_family = AF_INET;
-        socket_info->sin_port = htons(14888); // Change later
-        socket_info->sin_addr.s_addr = htonl(INADDR_LOOPBACK); // 127.0.0.1
+        struct sockaddr_in socket_info;
+        socket_info.sin_family = AF_INET;
+        socket_info.sin_port = htons(12345); // Change later
+        socket_info.sin_addr.s_addr = htonl(INADDR_ANY); // 0.0.0.0
         // Binding listening socket
-        if ( bind(listening_socket, (struct sockaddr *)socket_info, sizeof(socket_info)) != 0 ) {
-            throw Error_types::Bind_error(&listening_socket, socket_info);
+        if ( bind(listening_socket, (struct sockaddr *)&socket_info, sizeof(socket_info)) == -1 ) {  // Question here!!!
+            throw Error_types::Bind_error(&listening_socket);
         }
         std::cout << "Listen socket has been binded!\n";
-        delete socket_info;
 
         // Setting listening socket to listening
         if ( listen(listening_socket, SOMAXCONN) == -1 ) {
