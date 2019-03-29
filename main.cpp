@@ -1,8 +1,6 @@
 
 #include "errors.h"
 
-int set_nonblock(int);
-
 int main(int argc, char* argv[]) {
     try {
         // Socket initialization
@@ -25,9 +23,6 @@ int main(int argc, char* argv[]) {
         }
         std::cout << "Listening socket has been binded!\n";
         delete socket_info;
-
-        set_nonblock(master_socket);
-
         // Setting listening socket to listening
         if ( listen(master_socket, SOMAXCONN) == -1 ) {
             throw Error_types::Listen_error(&master_socket);
@@ -44,18 +39,6 @@ int main(int argc, char* argv[]) {
     }
 }
 
-int set_nonblock(int file_desc) {
-    int flags;
-#if defined(O_NONBLOCK)
-    if ( (flags = fcntl(file_desc, F_GETFL, 0))) {
-        flags = 0;
-    }
-    return fcntl(file_desc, F_SETFL, flags | O_NONBLOCK);
-#else
-    flags = 1;
-    return ioctl(file_desc, FIOBID, &flags);
-#endif
-}
 
 
 
