@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #define HAVE_STRUCT_TIMESPEC
 #include <pthread.h>
