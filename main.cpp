@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
         socket_info->sin_port = htons(12345); // Change later
         socket_info->sin_addr.s_addr = htonl(INADDR_LOOPBACK); // 127.0.0.1
         // Binding listening socket
-        if ( bind(master_socket, (sockaddr*)socket_info, sizeof(*socket_info)) == -1 ) {
+        if ( bind(master_socket, reinterpret_cast<sockaddr*>(socket_info), sizeof(*socket_info)) == -1 ) {
             delete socket_info;
             throw Error_types::Bind_error(&master_socket);
         }
