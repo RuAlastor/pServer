@@ -32,7 +32,12 @@ SlaveSocket::SlaveSocket(type_socket _fd) : personal_ID(current_ID++), slave_soc
     slave_watcher.start(_fd, ev::READ);
 }
 
+SlaveSocket::~SlaveSocket() {
+    slave_watcher.stop();
+    close(slave_socket);
 
+    std::cout << --current_ID << " client(s) connected.\n";
+}
 
 /* MASTER SOCKET */
 /* Private */
@@ -51,6 +56,10 @@ void MasterSocket::accept_cb(ev::io &_watcher, int _revents) {
     }
 
     SlaveSocket *client = new SlaveSocket(slave_socket);
+}
+
+void MasterSocket::signal_cb(ev::sig &_signal, int _revents) {
+    _signal.loop.break_loop();
 }
 
 /* Public */
@@ -91,7 +100,8 @@ void MasterSocket::SetEvent() {
     master_watcher.set<MasterSocket, &MasterSocket::accept_cb>(this);
     master_watcher.start(master_socket, ev::READ);
 
-    /* to be continue... */
+    master_signal_watcher.set<&MasterSocket::signal_cb>();
+    master_signal_watcher.start(SIGINT);
 }
 
 MasterSocket::~MasterSocket() {
