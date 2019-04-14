@@ -48,6 +48,6 @@ public:
 };
 
 /* GENERAL FUNCTION */
-int set_nonblock( int& _fd );
+int set_nonblock( type_socket& _fd );
 
 #endif // SERVER_H

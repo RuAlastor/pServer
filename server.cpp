@@ -11,13 +11,16 @@ void SlaveSocket::read_cb(ev::io &_watcher, int _revents) {
     }
 
     int amount_read = recv( _watcher.fd, buffer, sizeof(buffer), 0 );
+    /* Error */
     if ( amount_read < 0 ) {
         perror("Read error!");
         return;
     }
+    /* Connection closed */
     if ( amount_read == 0 ) {
         delete this;
     }
+    /* Got something */
     else {
         send( _watcher.fd, buffer, amount_read, MSG_NOSIGNAL);
     }
@@ -36,7 +39,7 @@ SlaveSocket::~SlaveSocket() {
     slave_watcher.stop();
     close(slave_socket);
 
-    std::cout << --current_ID << " client(s) connected.\n";
+    std::cout << current_ID << " client(s) connected.\n";
 }
 
 /* MASTER SOCKET */
@@ -54,8 +57,7 @@ void MasterSocket::accept_cb(ev::io &_watcher, int _revents) {
         perror("Accept error!");
         return;
     }
-
-    SlaveSocket *client = new SlaveSocket(slave_socket);
+    SlaveSocket* client = new SlaveSocket(slave_socket);
 }
 
 void MasterSocket::signal_cb(ev::sig &_signal, int _revents) {
@@ -111,7 +113,7 @@ MasterSocket::~MasterSocket() {
 }
 
 /* GENERAL FUNCTION */
-int set_nonblock(int& fd) {
+int set_nonblock(type_socket& fd) {
     int flags;
 #ifdef O_NONBLOCK
     if ( (flags = fcntl(fd, F_GETFL, 0)) == -1 ) {
