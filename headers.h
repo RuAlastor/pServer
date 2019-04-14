@@ -1,14 +1,19 @@
 #ifndef HEADERS_H
 #define HEADERS_H
 
+/* General part */
+#include <errno.h>
 #include <iostream>
-#include <string>
 
+/* Server part */
+#include <ev++.h>
+#include <fcntl.h>
+#include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <unistd.h>
 
+/* Log part */
 #define HAVE_STRUCT_TIMESPEC
 #include <pthread.h>
 
