@@ -39,7 +39,7 @@ SlaveSocket::~SlaveSocket() {
     slave_watcher.stop();
     close(slave_socket);
 
-    std::cout << current_ID << " client(s) connected.\n";
+    std::cout << --current_ID << " client(s) is(are) still connected.\n";
 }
 
 /* MASTER SOCKET */
@@ -57,7 +57,9 @@ void MasterSocket::accept_cb(ev::io &_watcher, int _revents) {
         perror("Accept error!");
         return;
     }
+
     SlaveSocket* client = new SlaveSocket(slave_socket);
+    client = nullptr;
 }
 
 void MasterSocket::signal_cb(ev::sig &_signal, int _revents) {
