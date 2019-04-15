@@ -4,6 +4,9 @@
 /* General part */
 #include <errno.h>
 #include <iostream>
+#include <string>
+#include <algorithm>
+#include <stdio.h>
 
 /* Server part */
 #include <ev++.h>

@@ -10,22 +10,30 @@ void SlaveSocket::read_cb(ev::io &_watcher, int _revents) {
         return;
     }
 
-    int amount_read = recv( _watcher.fd, buffer, sizeof(buffer), 0 );
+    char* buffer = new char[1024];
+
+    int amount_read = recv( _watcher.fd, buffer, sizeof(char) * 1024, 0 );
     /* Error */
     if ( amount_read < 0 ) {
+        delete [] buffer;
         perror("Read error!");
         return;
     }
     /* Connection closed */
     if ( amount_read == 0 ) {
+        delete [] buffer;
         delete this;
     }
     /* Got something */
     else {
-        send( _watcher.fd, buffer, amount_read, MSG_NOSIGNAL);
+        char* pageSt = buffer + 4;
+        char* pageEnd = std::find(pageSt, buffer + amount_read, ' ');
+        std::string page(pageSt, pageEnd);
+        delete [] buffer;
+
+        delete this;
     }
 }
-
 /* Public */
 SlaveSocket::SlaveSocket(type_socket _fd) : personal_ID(current_ID++), slave_socket(_fd) {
     set_nonblock(_fd);
@@ -65,7 +73,6 @@ void MasterSocket::accept_cb(ev::io &_watcher, int _revents) {
 void MasterSocket::signal_cb(ev::sig &_signal, int _revents) {
     _signal.loop.break_loop();
 }
-
 /* Public */
 MasterSocket::MasterSocket() {
     master_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -84,7 +91,6 @@ void MasterSocket::Bind(int& _port) {
     socket_info->sin_addr.s_addr = htonl(INADDR_LOOPBACK);          /* Default IP - 127.0.0.1 */
 
     if ( bind( master_socket, reinterpret_cast<sockaddr*>(socket_info), sizeof(*socket_info) ) == -1 ) {
-        delete socket_info;
         perror("Bind error!");
     }
 

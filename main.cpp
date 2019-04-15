@@ -6,10 +6,16 @@
 
 unsigned int SlaveSocket::current_ID = 0;
 
-int main( /* int argc, char* argv[] */ ) {
+int main( int argc, char* argv[] ) {
 
     /* Check args for port here */
     int default_port = 12345;
+    if ( argc > 1 ) {
+        default_port = atoi(argv[1]);
+    }
+    else {
+        std::cout << "Default port is 12345.\nNext time use: " << argv[0] << "<port>";
+    }
 
     /* Socket initialization */
     MasterSocket server;

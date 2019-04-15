@@ -13,7 +13,6 @@ private:
     static unsigned int current_ID;
     const unsigned int personal_ID;
     type_socket slave_socket;
-    char buffer[1024];
 
     void read_cb( ev::io& _watcher, int _revents );
 
