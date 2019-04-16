@@ -15,4 +15,4 @@ logsqueue.o: logsqueue.cpp logsqueue.h headers.h
 	$(CC) -c -lpthread logsqueue.cpp
 
 clean:
-	rm -rf *.o build_server
+	rm -rf *.o build_server log*.txt

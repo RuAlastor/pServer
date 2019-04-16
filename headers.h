@@ -21,7 +21,8 @@
 #include <queue>
 #include <memory>
 #include <fstream>
-#include <time.h>
+#include <ctime>
+#include <iomanip>
 
 typedef int type_socket;
 

@@ -10,17 +10,19 @@ void SlaveSocket::read_cb( ev::io &_watcher, int _revents ) {
     }
 
     char* buffer = new char[1024];
-
     int amount_read = recv( _watcher.fd, buffer, sizeof(char) * 1024, 0 );
     /* Error */
     if ( amount_read < 0 ) {
         delete [] buffer;
+
         perror( "Read error!" );
+
         return;
     }
     /* Connection closed */
     if ( amount_read == 0 ) {
         delete [] buffer;
+
         delete this;
     }
     /* Got something */
@@ -31,6 +33,7 @@ void SlaveSocket::read_cb( ev::io &_watcher, int _revents ) {
         // std::string page = "Check";
         std::unique_ptr<std::string> new_job( std::move(page) );
         logs_queue.addJob( std::move(new_job) );
+
         delete [] buffer;
 
         delete this;
@@ -60,9 +63,7 @@ void MasterSocket::accept_cb(ev::io &_watcher, int _revents) {
         return;
     }
 
-    sockaddr_in client_socket_info;
-    socklen_t client_socket_info_size;
-    int slave_socket = accept( _watcher.fd, reinterpret_cast<sockaddr*>(&client_socket_info), &client_socket_info_size );
+    int slave_socket = accept( _watcher.fd, nullptr, nullptr );
     if (slave_socket < 0) {
         perror( "Accept error!" );
         return;
@@ -78,7 +79,7 @@ void MasterSocket::signal_cb( ev::sig &_signal, int _revents ) {
 
 /* Public */
 MasterSocket::MasterSocket() {
-    master_socket = socket(AF_INET, SOCK_STREAM, 0);
+    master_socket = socket( AF_INET, SOCK_STREAM, 0 );
                         /* IPv4     TCP          IPPROTO_TCP */
     if ( master_socket == -1 ) {
         perror( "Initialization error!" );
@@ -99,6 +100,7 @@ void MasterSocket::Bind(int& _port) {
 
     set_nonblock(master_socket);
     delete socket_info;
+
     std::cout << "Listening socket has been binded!\n";
 }
 
@@ -106,6 +108,7 @@ void MasterSocket::SetToListen() {
     if ( listen( master_socket, SOMAXCONN ) == -1 ) {
         perror( "Error on setting to listen step!" );
     }
+
     std::cout << "Waiting for connection...\n";
 }
 
@@ -120,13 +123,13 @@ void MasterSocket::SetEvent() {
 void MasterSocket::SetLoggers() {
     for (int i = 0; i < 4; i++) {
         fileName[i] = "log" + std::to_string(i) + ".txt";
-        pthread_create(&loggers[i], NULL, getLogs, reinterpret_cast<void*>(&fileName[i]) );
+        pthread_create( &loggers[i], NULL, getLogs, reinterpret_cast<void*>(&fileName[i]) ); // Chech for error later
         pthread_detach(loggers[i]);
     }
 }
 
 MasterSocket::~MasterSocket() {
-    shutdown(master_socket, SHUT_RDWR);
+    shutdown( master_socket, SHUT_RDWR );
     close(master_socket);
     std::cout << "Listening socket has been closed!\n";
 }
@@ -160,13 +163,21 @@ void* getLogs(void *_rawData) {
     }
 
     std::unique_ptr<std::string> job;
+    time_t T = time(NULL);
+    tm c_tm;
     while ( job = logs_queue.getJob() ) {
-        std::cout << "Got to <getJob()>\n";
         if ( job ) {
-            f_out << *job << '\n';
+            // std::cout << *job << '\n';
+            c_tm = *localtime(&T);
+            f_out << *job << ' ' << c_tm.tm_year + 1900 << '.'
+                  << std::setw(2) << std::setfill('0') << c_tm.tm_mon + 1 << '.'
+                  << std::setw(2) << std::setfill('0') << c_tm.tm_mday << ' '
+                  << std::setw(2) << std::setfill('0') << c_tm.tm_hour << ':'
+                  << std::setw(2) << std::setfill('0') << c_tm.tm_min << ':'
+                  << std::setw(2) << std::setfill('0') << c_tm.tm_sec << '\n';
         }
     }
 
     f_out.close();
-    return NULL;
+    pthread_exit(nullptr);
 }

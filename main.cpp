@@ -14,7 +14,7 @@ int main( int argc, char* argv[] ) {
         default_port = atoi(argv[1]);
     }
     else {
-        std::cout << "Default port is 12345.\nNext time use: " << argv[0] << "<port>\n";
+        std::cout << "Default port is 12345.\nNext time use: " << argv[0] << " <port>\n";
     }
 
     /* Socket initialization */
