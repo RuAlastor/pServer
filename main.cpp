@@ -1,10 +1,10 @@
 
-
-#include "headers.h"
 #include "server.h"
 
-
 unsigned int SlaveSocket::current_ID = 0;
+
+LogsQueue logs_queue;
+
 
 int main( int argc, char* argv[] ) {
 
@@ -14,7 +14,7 @@ int main( int argc, char* argv[] ) {
         default_port = atoi(argv[1]);
     }
     else {
-        std::cout << "Default port is 12345.\nNext time use: " << argv[0] << "<port>";
+        std::cout << "Default port is 12345.\nNext time use: " << argv[0] << "<port>\n";
     }
 
     /* Socket initialization */
@@ -28,7 +28,7 @@ int main( int argc, char* argv[] ) {
     server.SetToListen();
 
     /* Create threads for logs here */
-
+    server.SetLoggers();
 
     /* Accept connections here */
     ev::default_loop loop;

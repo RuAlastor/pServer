@@ -1,12 +1,11 @@
 
-
 #include "server.h"
 
 /* SLAVE SOCKET */
 /* Private */
-void SlaveSocket::read_cb(ev::io &_watcher, int _revents) {
+void SlaveSocket::read_cb( ev::io &_watcher, int _revents ) {
     if (EV_ERROR & _revents) {
-        perror("Invalid event!");
+        perror( "Invalid event!" );
         return;
     }
 
@@ -16,7 +15,7 @@ void SlaveSocket::read_cb(ev::io &_watcher, int _revents) {
     /* Error */
     if ( amount_read < 0 ) {
         delete [] buffer;
-        perror("Read error!");
+        perror( "Read error!" );
         return;
     }
     /* Connection closed */
@@ -27,8 +26,11 @@ void SlaveSocket::read_cb(ev::io &_watcher, int _revents) {
     /* Got something */
     else {
         char* pageSt = buffer + 4;
-        char* pageEnd = std::find(pageSt, buffer + amount_read, ' ');
-        std::string page(pageSt, pageEnd);
+        char* pageEnd = std::find( pageSt, buffer + amount_read, ' ' );
+        std::string page( pageSt, pageEnd );
+
+        // std::unique_ptr<std::string> new_job;
+        // logs_queue.addJob( new_job );
         delete [] buffer;
 
         delete this;
@@ -53,8 +55,8 @@ SlaveSocket::~SlaveSocket() {
 /* MASTER SOCKET */
 /* Private */
 void MasterSocket::accept_cb(ev::io &_watcher, int _revents) {
-    if (EV_ERROR & _revents) {
-        perror("Invalid event!");
+    if ( EV_ERROR & _revents ) {
+        perror( "Invalid event!" );
         return;
     }
 
@@ -62,7 +64,7 @@ void MasterSocket::accept_cb(ev::io &_watcher, int _revents) {
     socklen_t client_socket_info_size;
     int slave_socket = accept( _watcher.fd, reinterpret_cast<sockaddr*>(&client_socket_info), &client_socket_info_size );
     if (slave_socket < 0) {
-        perror("Accept error!");
+        perror( "Accept error!" );
         return;
     }
 
@@ -70,15 +72,16 @@ void MasterSocket::accept_cb(ev::io &_watcher, int _revents) {
     client = nullptr;
 }
 
-void MasterSocket::signal_cb(ev::sig &_signal, int _revents) {
+void MasterSocket::signal_cb( ev::sig &_signal, int _revents ) {
     _signal.loop.break_loop();
 }
+
 /* Public */
 MasterSocket::MasterSocket() {
     master_socket = socket(AF_INET, SOCK_STREAM, 0);
                         /* IPv4     TCP          IPPROTO_TCP */
     if ( master_socket == -1 ) {
-        perror("Initialization error!");
+        perror( "Initialization error!" );
     }
     std::cout << "Listening socket has been initialized!\n";
 }
@@ -91,7 +94,7 @@ void MasterSocket::Bind(int& _port) {
     socket_info->sin_addr.s_addr = htonl(INADDR_LOOPBACK);          /* Default IP - 127.0.0.1 */
 
     if ( bind( master_socket, reinterpret_cast<sockaddr*>(socket_info), sizeof(*socket_info) ) == -1 ) {
-        perror("Bind error!");
+        perror( "Bind error!" );
     }
 
     set_nonblock(master_socket);
@@ -101,7 +104,7 @@ void MasterSocket::Bind(int& _port) {
 
 void MasterSocket::SetToListen() {
     if ( listen( master_socket, SOMAXCONN ) == -1 ) {
-        perror("Error on setting to listen step!");
+        perror( "Error on setting to listen step!" );
     }
     std::cout << "Waiting for connection...\n";
 }
@@ -112,6 +115,14 @@ void MasterSocket::SetEvent() {
 
     master_signal_watcher.set<&MasterSocket::signal_cb>();
     master_signal_watcher.start(SIGINT);
+}
+
+void MasterSocket::SetLoggers() {
+    for (int i = 0; i < 4; i++) {
+        fileName[i] = "log" + std::to_string(i) + ".txt";
+        pthread_create(&loggers[i], NULL, getLogs, reinterpret_cast<void*>(&fileName[i]) );
+        pthread_detach(loggers[i]);
+    }
 }
 
 MasterSocket::~MasterSocket() {
@@ -132,4 +143,29 @@ int set_nonblock(type_socket& fd) {
     flags = 1;
     return ioctl(fd, FIOBIO, &flags);
 #endif
+}
+
+
+void* getLogs(void *_rawData) {
+    std::string fileName = *reinterpret_cast<std::string*>(_rawData);
+    // std::cout << "A new thread started\n";
+    // std::cout << fileName << '\n';
+
+    std::ofstream f_out(fileName);
+
+    if ( !f_out.is_open() ) {
+        perror( "Failed to open file" );
+        return NULL;
+    }
+    std::cout << "1";
+
+    std::unique_ptr<std::string> job;
+    while ( job = logs_queue.getJob() ) {
+        if ( job ) {
+            f_out << *job << '\n';
+        }
+    }
+
+
+    return NULL;
 }

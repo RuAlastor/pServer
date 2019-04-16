@@ -6,7 +6,6 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
-#include <stdio.h>
 
 /* Server part */
 #include <ev++.h>
@@ -19,6 +18,10 @@
 /* Log part */
 #define HAVE_STRUCT_TIMESPEC
 #include <pthread.h>
+#include <queue>
+#include <memory>
+#include <fstream>
+#include <time.h>
 
 typedef int type_socket;
 

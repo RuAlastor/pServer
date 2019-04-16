@@ -1,9 +1,7 @@
 #ifndef SERVER_H
 #define SERVER_H
 
-#ifndef HEADERS_H
-    #include "headers.h"
-#endif
+#include "logsqueue.h"
 
 /* SLAVE SOCKET */
 class SlaveSocket {
@@ -31,9 +29,13 @@ private:
     type_socket master_socket;
     sockaddr_in* socket_info;
 
+    pthread_t loggers[4];
+    std::string fileName[4];
 
     void accept_cb( ev::io& _watcher, int _revents );
     static void signal_cb(ev::sig& _signal, int _revents);
+
+    friend void* getLogs(void *_rawData);
 
 public:
 
@@ -42,11 +44,15 @@ public:
     void Bind( int& _port );
     void SetToListen();
     void SetEvent();
+    void SetLoggers();
 
     virtual ~MasterSocket();
 };
 
 /* GENERAL FUNCTION */
+extern LogsQueue logs_queue;
+
 int set_nonblock( type_socket& _fd );
+void* getLogs(void* _rawData);
 
 #endif // SERVER_H
