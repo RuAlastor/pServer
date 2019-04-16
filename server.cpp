@@ -27,10 +27,10 @@ void SlaveSocket::read_cb( ev::io &_watcher, int _revents ) {
     else {
         char* pageSt = buffer + 4;
         char* pageEnd = std::find( pageSt, buffer + amount_read, ' ' );
-        std::string page( pageSt, pageEnd );
-
-        // std::unique_ptr<std::string> new_job;
-        // logs_queue.addJob( new_job );
+        std::string* page = new std::string( pageSt, pageEnd );
+        // std::string page = "Check";
+        std::unique_ptr<std::string> new_job( std::move(page) );
+        logs_queue.addJob( std::move(new_job) );
         delete [] buffer;
 
         delete this;
@@ -148,24 +148,25 @@ int set_nonblock(type_socket& fd) {
 
 void* getLogs(void *_rawData) {
     std::string fileName = *reinterpret_cast<std::string*>(_rawData);
-    // std::cout << "A new thread started\n";
+    std::cout << "A new thread started\n";
     // std::cout << fileName << '\n';
 
     std::ofstream f_out(fileName);
 
     if ( !f_out.is_open() ) {
+        std::cout << "Failed to open file\n";
         perror( "Failed to open file" );
-        return NULL;
+        pthread_exit(nullptr);
     }
-    std::cout << "1";
 
     std::unique_ptr<std::string> job;
     while ( job = logs_queue.getJob() ) {
+        std::cout << "Got to <getJob()>\n";
         if ( job ) {
             f_out << *job << '\n';
         }
     }
 
-
+    f_out.close();
     return NULL;
 }
