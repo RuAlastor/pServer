@@ -27,10 +27,30 @@ void SlaveSocket::read_cb( ev::io &_watcher, int _revents ) {
     }
     /* Got something */
     else {
+
+        std::cout << buffer << '\n';
+
         char* pageSt = buffer + 4;
         char* pageEnd = std::find( pageSt, buffer + amount_read, ' ' );
+
         std::string* page = new std::string( pageSt, pageEnd );
-        // std::string page = "Check";
+        std::stringstream response;
+        std::stringstream response_body;
+
+        response_body << "<title>Response</title>\n"
+                << "<h1>Hello World!</h1>\n";
+
+        response << "HTTP/1.1 200 OK\r\n"
+                << "Version: HTTP/1.1\r\n"
+                << "Content-Type: text/html; charset=utf-8\r\n"
+                << "Content-Length: " << response_body.str().length()
+                << "\r\n\r\n"
+                << response_body.str();
+
+        if ( send( _watcher.fd, response.str().c_str(), response.str().length(), 0 ) == -1 ) {
+            perror( "Send error!" );
+        }
+
         std::unique_ptr<std::string> new_job( std::move(page) );
         logs_queue.addJob( std::move(new_job) );
 
@@ -131,7 +151,7 @@ void MasterSocket::SetLoggers() {
 MasterSocket::~MasterSocket() {
     shutdown( master_socket, SHUT_RDWR );
     close(master_socket);
-    std::cout << "Listening socket has been closed!\n";
+    std::cout << "\nListening socket has been closed!\n";
 }
 
 /* GENERAL FUNCTION */
